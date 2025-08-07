@@ -1,0 +1,16 @@
+fix = true
+show-fixes = true
+line-length = 120
+
+[lint]
+ignore = [
+	"E402", # Module level import not at top of file
+]
+
+[lint.isort]
+lines-after-imports = 1
+lines-between-types = 1
+
+[format]
+indent-style = "tab"
+quote-style = "preserve"
