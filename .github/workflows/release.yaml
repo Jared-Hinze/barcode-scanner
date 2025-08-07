@@ -1,0 +1,104 @@
+name: Create New Release
+
+# Create a new tag for release once a PR is merged.
+# If a tag was created successfully - create a release.
+on:
+  workflow_dispatch:
+    inputs:
+      is_draft:
+        description: Mark as Draft
+        type: boolean
+        default: true
+      is_prerelease:
+        description: Mark as Pre-Release
+        type: boolean
+        default: true
+
+  pull_request:
+    types: [ closed ]
+    paths: [ src/** ]
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: CI Sanity Check
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+
+    permissions:
+      contents: read
+      id-token: write
+
+    uses: ./.github/workflows/ci.yaml
+
+  create_tag:
+    name: Create Tag
+    needs: [ build ]
+    if: needs.build.result == 'success'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba
+
+      - name: Handle Tagging
+        id: tagger
+        run: |
+          version="v$(uv version --short)"
+          if [[ -z $(git tag -l $version) ]]; then
+            echo "Creating new tag: $version"
+            git tag $version
+            git push origin refs/tags/$version
+          else
+            echo "Skipping: tag $version already exists."
+          fi
+
+          echo "tag=$version" >> $GITHUB_OUTPUT
+
+    outputs:
+      tag: ${{ steps.tagger.outputs.tag }}
+
+  release:
+    name: Create Release with Artifacts
+    needs: [ build, create_tag ]
+    if: needs.create_tag.result == 'success'
+
+    runs-on: ubuntu-latest
+
+    env:
+      REPO_NAME: ${{ github.event.repository.name }}
+      ARTIFACT_NAME: ${{ github.sha }}
+
+    steps:
+      - name: Download Artifacts
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@ac66b43f0e6a346234dd65d4d0c8fbb31cb316e5
+        with:
+          workflow: ci.yaml
+          run_id: ${{ needs.build.outputs.run_id }}
+
+      - name: ReZip Artifacts
+        run: |
+          mv ${ARTIFACT_NAME}/* .
+          rmdir ${ARTIFACT_NAME}
+          zip -r ${REPO_NAME}.zip . -x *.sigstore.json
+
+      - name: Create Release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
+        with:
+          name: ${{ needs.create_tag.outputs.tag }}
+          tag_name: ${{ needs.create_tag.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            *.sigstore.json
+            ${{ env.REPO_NAME }}.exe
+            ${{ env.REPO_NAME }}.zip
+          draft: ${{ inputs.is_draft || false }}
+          prerelease: ${{ inputs.is_prerelease || false }}
+          make_latest: true
