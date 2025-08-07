@@ -1,0 +1,60 @@
+[project]
+name = "barcode-scanner"
+description = "A simple IP camera barcode scanner that integrates with a backend database."
+version = "0.0.0"
+
+requires-python = ">=3.11"
+
+readme = "README.md"
+dependencies = [
+	# "pywin32>=310",
+	# "semver>=3.0.4",
+]
+
+authors = [
+	{name = "Jared Hinze", email = "Jared.L.Hinze@gmail.com"}
+]
+maintainers = [
+	{name = "Jared Hinze", email = "Jared.L.Hinze@gmail.com"}
+]
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+
+keywords = ["barcode", "scanner", "Code128"]
+
+[dependency-groups]
+build-exe = [
+	"pyinstaller >=6.14.1, <7.0.0",
+	"pyinstaller-versionfile>=3.0.1",
+]
+static-type-checking = [
+	"mypy >=1.16.1, <2.0.0",
+]
+unit-testing = [
+	"hypothesis>=6.135.20",
+	"pytest>=8.4.1",
+	"pytest-mock>=3.14.1",
+	"requests-mock>=1.12.1",
+]
+dev = [
+	"pre-commit >=4.2.0, <5.0.0",
+	{include-group = "build-exe"},
+	{include-group = "static-type-checking"},
+	{include-group = "unit-testing"},
+]
+
+[tool.pytest.ini_options]
+pythonpath = [ "src" ]
+
+[tool.mypy]
+ignore_missing_imports = true
+check_untyped_defs = true
+show_error_codes = true
+disable_error_code = [
+	"attr-defined",
+	"assignment",
+	"index",
+	"misc",
+	"union-attr",
+	"var-annotated",
+]
