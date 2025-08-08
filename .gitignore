@@ -1,0 +1,16 @@
+# Hypothesis
+.hypothesis
+
+# PyInstaller
+packaging/
+dist/
+versionfile.txt
+
+# Python
+__pycache__/
+*.egg-info/
+*.py[cod]
+*$py.class
+
+# Logging
+*.log
