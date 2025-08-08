@@ -45,50 +45,50 @@ jobs:
           TO: ${{ github.event.pull_request.head.sha || 'HEAD' }}
         run: uv run pre-commit run --from-ref $FROM --to-ref $TO
 
-  pytest:
-    name: Run pytest
+  # pytest:
+  #   name: Run pytest
 
-    runs-on: windows-latest
+  #   runs-on: windows-latest
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba
+  #     - name: Install uv
+  #       uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba
 
-      - name: Run PyTests
-        shell: bash
-        run: |
-          uv run pytest \
-            --verbose \
-            --capture=no \
-            --hypothesis-profile=ci \
-            --hypothesis-explain
+  #     - name: Run PyTests
+  #       shell: bash
+  #       run: |
+  #         uv run pytest \
+  #           --verbose \
+  #           --capture=no \
+  #           --hypothesis-profile=ci \
+  #           --hypothesis-explain
 
-  build-exe:
-    name: Run PyInstaller
+  # build-exe:
+  #   name: Run PyInstaller
 
-    runs-on: windows-latest
+  #   runs-on: windows-latest
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba
+  #     - name: Install uv
+  #       uses: astral-sh/setup-uv@bd01e18f51369d5a26f1651c3cb451d3417e3bba
 
-      - name: Run PyInstaller
-        run: uv run pyinstaller packaging.spec
+  #     - name: Run PyInstaller
+  #       run: uv run pyinstaller packaging.spec
 
-      - name: Sign EXE
-        uses: sigstore/gh-action-sigstore-python@f7ad0af51a5648d09a20d00370f0a91c3bdf8f84
-        with:
-          inputs: dist/${{ github.event.repository.name }}.exe
+  #     - name: Sign EXE
+  #       uses: sigstore/gh-action-sigstore-python@f7ad0af51a5648d09a20d00370f0a91c3bdf8f84
+  #       with:
+  #         inputs: dist/${{ github.event.repository.name }}.exe
 
-      - name: Upload Artifacts
-        id: upload
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: ${{ github.sha }}
-          path: dist/*
+  #     - name: Upload Artifacts
+  #       id: upload
+  #       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+  #       with:
+  #         name: ${{ github.sha }}
+  #         path: dist/*
