@@ -46,3 +46,6 @@ DIR_SOUNDS = ensure_directory(DIR_ASSETS, "sounds")
 DIR_OUTPUTS = BASEDIR / "outputs"
 DIR_SHEETS = ensure_directory(DIR_OUTPUTS / "sheets")
 DIR_TICKETS = ensure_directory(DIR_OUTPUTS / "tickets")
+
+# Configs
+DIR_CONFIGS = BASEDIR / "configs"

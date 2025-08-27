@@ -8,21 +8,25 @@ from PIL import Image, ImageOps
 # N/A
 
 # Local Libraries
+from config import Settings
 from paths import DIR_SHEETS, DIR_TICKETS
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# Settings
+# ==============================================================================
+Sheet = Settings.sheet
+
+# ==============================================================================
 # Structs
-# ------------------------------------------------------------------------------
+# ==============================================================================
 Border = namedtuple("Border", ["left", "top", "right", "bottom"])  # ImageOps order...
 Layout = namedtuple("Layout", ["rows", "columns"])
 
 
-# ------------------------------------------------------------------------------
-# Functions
-# ------------------------------------------------------------------------------
+# ==============================================================================
 def generate_sheets():
-	border = Border(0, 25, 0, 0)
-	border_color = 0xFFFFFF
+	border = Border(*Sheet.border)
+	border_color = Sheet.border_color
 
 	images = [
 		ImageOps.expand(Image.open(file), border=border, fill=border_color)
@@ -34,7 +38,7 @@ def generate_sheets():
 	size = images[0].size
 	total_images = len(images)
 
-	layout = Layout(3, 2)
+	layout = Layout(Sheet.rows, Sheet.columns)
 	step = layout.rows * layout.columns
 	for i in range(0, total_images, step):
 		generate_sheet(images[i : i + step], layout, size, border)
@@ -49,7 +53,7 @@ def generate_sheet(images, layout, size, border):
 		layout.columns * (width + border.left + border.right),
 		layout.rows * (height + border.top + border.bottom),
 	)
-	background_color = 0xFFFFFF
+	background_color = Sheet.background_color
 	image = Image.new("RGB", size=full_image_size, color=background_color)
 
 	for i, (row, col) in enumerate(product(*map(range, layout))):
@@ -63,10 +67,3 @@ def generate_sheet(images, layout, size, border):
 		image.paste(images[i], tuple(offset))
 
 	image.save(DIR_SHEETS / f"{uuid.uuid4()}.png", "PNG")
-
-
-# ------------------------------------------------------------------------------
-if __name__ == "__main__":
-	print("Starting...")
-	generate_sheets()
-	print("Finished")
