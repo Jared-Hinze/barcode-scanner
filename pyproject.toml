@@ -14,6 +14,7 @@ dependencies = [
 	"python-barcode>=0.15.1",
 	# "semver>=3.0.4",
 	"pyzbar>=0.1.9",
+	"rstr>=3.2.2",
 	"ruamel-yaml>=0.18.15",
 ]
 

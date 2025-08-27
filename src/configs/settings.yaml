@@ -1,0 +1,21 @@
+database:
+  driver: sqlite
+barcode:
+  format: Code128
+  chars: a-zA-Z0-9
+  length: 12
+  scalar: 400
+  save_options:
+    module_height: 5
+    module_width: 0.2
+    text_distance: 3
+    font_size: 5
+ticket:
+  header: ''
+  background-color: 0xFFFFFF
+sheet:
+  rows: 3
+  columns: 2
+  border: [0, 25, 0, 0]
+  border-color: 0xFFFFFF
+  background-color: 0xFFFFFF
