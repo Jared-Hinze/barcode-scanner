@@ -43,7 +43,7 @@ def update(code, used=0):
 def queryValList(sql, vals=None):
 	try:
 		results = cur.execute(sql, vals or tuple())
-		return [r[0] for r in cur.fetchall()]
+		return [r[0] for r in results.fetchall()]
 	except Exception:
 		raise
 
