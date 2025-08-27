@@ -12,5 +12,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
 # Logging
 *.log
+
+# Generated Files
+*.db
+src/outputs/
