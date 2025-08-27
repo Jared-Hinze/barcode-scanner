@@ -5,7 +5,8 @@
 # N/A
 
 # Local Libraries
-from database.sqlite import con, cur
+from database.sqlite import cur
+
 
 # ------------------------------------------------------------------------------
 def lookup_code(code):
