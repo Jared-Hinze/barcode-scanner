@@ -13,6 +13,7 @@ from PIL import Image
 from database.sqlite import db
 from paths import DIR_IMAGES, DIR_TICKETS
 
+
 # ==============================================================================
 # Helpers
 # ==============================================================================
@@ -20,6 +21,7 @@ def generate_code(character_set, excludes):
 	while (code := ''.join(random.choices(character_set, k=12))) in excludes:
 		continue
 	return code
+
 
 # ------------------------------------------------------------------------------
 def create_barcode(code, filename):
@@ -32,6 +34,7 @@ def create_barcode(code, filename):
 			"font_size": 5,
 		},
 	)
+
 
 # ==============================================================================
 # Functions

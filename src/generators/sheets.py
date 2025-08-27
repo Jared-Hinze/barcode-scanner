@@ -1,23 +1,21 @@
 # Built-in Libraries
-import os
 import uuid
 from collections import namedtuple
 from itertools import product
-from pathlib import Path
 from PIL import Image, ImageOps
 
 # Third Party Libraries
 # N/A
 
 # Local Libraries
-from database.sqlite import db
 from paths import DIR_SHEETS, DIR_TICKETS
 
 # ------------------------------------------------------------------------------
 # Structs
 # ------------------------------------------------------------------------------
-Border = namedtuple("Border", ["left", "top", "right", "bottom"]) # ImageOps order...
+Border = namedtuple("Border", ["left", "top", "right", "bottom"])  # ImageOps order...
 Layout = namedtuple("Layout", ["rows", "columns"])
+
 
 # ------------------------------------------------------------------------------
 # Functions
@@ -29,7 +27,7 @@ def generate_sheets():
 	images = [
 		ImageOps.expand(Image.open(file), border=border, fill=border_color)
 		for file in DIR_TICKETS.glob("*.png")
-	]
+	]  # fmt: skip
 	if not images:
 		return
 
@@ -39,7 +37,8 @@ def generate_sheets():
 	layout = Layout(3, 2)
 	step = layout.rows * layout.columns
 	for i in range(0, total_images, step):
-		generate_sheet(images[i:i + step], layout, size, border)
+		generate_sheet(images[i : i + step], layout, size, border)
+
 
 # ------------------------------------------------------------------------------
 def generate_sheet(images, layout, size, border):
@@ -64,6 +63,7 @@ def generate_sheet(images, layout, size, border):
 		image.paste(images[i], tuple(offset))
 
 	image.save(DIR_SHEETS / f"{uuid.uuid4()}.png", "PNG")
+
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
