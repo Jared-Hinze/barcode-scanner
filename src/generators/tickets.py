@@ -10,7 +10,7 @@ from PIL import Image
 
 # Local Libraries
 from config import Settings
-from database.sqlite import db
+from database import db
 from paths import DIR_IMAGES, DIR_TICKETS
 
 # ==============================================================================
