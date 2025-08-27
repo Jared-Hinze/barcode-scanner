@@ -8,6 +8,7 @@ from pathlib import Path
 # Local Libraries
 # N/A
 
+
 # ==============================================================================
 # Helpers
 # ==============================================================================
@@ -17,6 +18,7 @@ def ensure_directory(*paths):
 		p.mkdir(exist_ok=True, parents=True)
 	return p
 
+
 # ------------------------------------------------------------------------------
 def ensure_file(base_dir, file):
 	p = ensure_directory(base_dir)
@@ -25,15 +27,16 @@ def ensure_file(base_dir, file):
 		p.touch(exist_ok=True)
 	return p
 
+
 # ==============================================================================
 # Paths
 # ==============================================================================
 if getattr(sys, "frozen", False):
-    BASEDIR = Path(sys.executable).parent
-    DIR_ASSETS = Path(sys._MEIPASS) / "assets"
+	BASEDIR = Path(sys.executable).parent
+	DIR_ASSETS = Path(sys._MEIPASS) / "assets"
 else:
-    BASEDIR = Path(__file__).parent
-    DIR_ASSETS = BASEDIR / "assets"
+	BASEDIR = Path(__file__).parent
+	DIR_ASSETS = BASEDIR / "assets"
 
 # Assets
 DIR_IMAGES = ensure_directory(DIR_ASSETS, "images")
