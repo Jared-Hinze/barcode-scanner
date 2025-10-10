@@ -1,30 +1,33 @@
 # Built-in Libraries
-# N/A
+from collections.abc import Iterable
+import sqlite3
 
 # Third Party Libraries
 # N/A
 
 # Local Libraries
-from database.sqlite import cur
+from database import sqlite as db
 
 
 # ------------------------------------------------------------------------------
-def lookup_code(code):
-	try:
-		return queryOneDict(
-			""" SELECT *
-				FROM barcodes
-				WHERE code = ?;
-			""",
-			(code,),
-		)
-	except Exception as e:
-		return {"error": str(e)}
+def execute(sql, vals=None) -> sqlite3.Cursor:
+	return db.cur.execute(sql, vals or tuple())
 
 
 # ------------------------------------------------------------------------------
-def insert(codes):
-	cur.executemany(
+def executemany(sql, vals=None) -> sqlite3.Cursor:
+	return db.cur.executemany(sql, vals or tuple())
+
+
+# ------------------------------------------------------------------------------
+def insert(codes: Iterable[str]) -> sqlite3.Cursor:
+	if not hasattr(codes, "__iter__"):
+		raise TypeError(f'Expected iterable. Got "{type(codes)}".')
+
+	if isinstance(codes, str):
+		codes = (codes,)
+
+	return executemany(
 		""" INSERT INTO barcodes (code)
 			VALUES (?);
 		""",
@@ -33,11 +36,11 @@ def insert(codes):
 
 
 # ------------------------------------------------------------------------------
-def update(code, used=0):
-	if used:
-		return
+def update(code: str) -> sqlite3.Cursor:
+	if not isinstance(code, str):
+		raise TypeError(f"Expected string. Got '{type(code)}'.")
 
-	cur.execute(
+	return execute(
 		""" UPDATE barcodes
 			SET used = 1
 			WHERE code = ?;
@@ -47,20 +50,59 @@ def update(code, used=0):
 
 
 # ------------------------------------------------------------------------------
-def queryValList(sql, vals=None):
-	try:
-		results = cur.execute(sql, vals or tuple())
-		return [r[0] for r in results.fetchall()]
-	except Exception:
-		raise
+def queryOneVal(sql, vals=None, default=None):
+	cursor = execute(sql, vals)
+
+	if len(cursor.description) > 1:
+		raise ValueError("Query returned multiple columns. Expected 1 column.")
+
+	recs = cursor.fetchall()
+	if len(recs) > 1:
+		raise ValueError("Query returned multiple rows. Expected 1 row.")
+
+	if len(recs) == 1:
+		return recs[0][0]
+
+	return default
 
 
 # ------------------------------------------------------------------------------
-def queryOneDict(sql, vals=None):
+def queryValList(sql, vals=None, default=None) -> list:
+	cursor = execute(sql, vals)
+
+	if len(cursor.description) > 1:
+		raise ValueError("Query returned multiple columns. Expected 1 column.")
+
+	if recs := cursor.fetchall():
+		return [rec[0] for rec in recs]
+
+	return default or []
+
+
+# ------------------------------------------------------------------------------
+def queryOneDict(sql, vals=None, default=None) -> dict:
+	cursor = execute(sql, vals)
+
+	recs = cursor.fetchall()
+	if len(recs) > 1:
+		raise ValueError("Query returned multiple rows. Expected 1 row.")
+
+	if recs:
+		keys = [r[0] for r in cursor.description]
+		return {k: v for k, v in zip(keys, recs[0])}
+
+	return default or {}
+
+
+# ------------------------------------------------------------------------------
+def lookup_code(code) -> dict:
 	try:
-		results = cur.execute(sql, vals or tuple())
-		keys = [r[0] for r in results.description]
-		vals = results.fetchall()[0]
-		return {k: v for k, v in zip(keys, vals)}
-	except Exception:
-		return {}
+		return queryOneDict(
+			""" SELECT *
+				FROM barcodes
+				WHERE code = ?;
+			""",
+			vals=(code,),
+		)
+	except Exception as e:
+		return {"error": str(e)}

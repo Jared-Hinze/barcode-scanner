@@ -2,7 +2,7 @@ database:
   driver: sqlite
 barcode:
   format: Code128
-  chars: a-zA-Z0-9
+  chars: ''
   length: 12
   scalar: 400
   save_options:

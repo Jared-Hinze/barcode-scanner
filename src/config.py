@@ -14,11 +14,19 @@ from paths import DIR_CONFIGS, ensure_file
 FILE_LOGGING_CONFIG = ensure_file(DIR_CONFIGS, "logging_config.yaml")
 FILE_SETTINGS = ensure_file(DIR_CONFIGS, "settings.yaml")
 
+
 # ==============================================================================
 # Logging
 # ==============================================================================
+def setup_logging():
+	if not getattr(setup_logging, "ran", False):
+		logging.config.dictConfig(yaml.load(FILE_LOGGING_CONFIG))
+		setup_logging.ran = True
+
+
+# ------------------------------------------------------------------------------
 if not logging._handlers:
-	logging.config.dictConfig(yaml.load(FILE_LOGGING_CONFIG))
+	setup_logging()
 
 
 # ==============================================================================

@@ -1,17 +1,25 @@
 # Built-in Libraries
+import logging
 import math
+import re
+import string
 import uuid
 
 # Third Party Libraries
 import barcode
-import rstr
 from barcode.writer import ImageWriter
 from PIL import Image
 
 # Local Libraries
 from config import Settings
 from database import db
+from generators.code_generator import CodeGenerator
 from paths import DIR_IMAGES, DIR_TICKETS
+
+# ==============================================================================
+# Initializers
+# ==============================================================================
+logger = logging.getLogger(__name__)
 
 # ==============================================================================
 # Settings
@@ -21,19 +29,43 @@ Ticket = Settings.ticket
 
 
 # ==============================================================================
-def generate_code(chars, length, excludes):
-	while (code := rstr.xeger(rf"[{chars}]{{{length}}}")) in excludes:
-		continue
-	return code
+def create_charset(chars):
+	if not chars:
+		return ''
+
+	S = set()
+	for part in re.findall(r"\[?(\\[dw]|.-.|.(?!-.))\]?", chars):
+		if len(part) == 3:
+			lo, hi = part.split('-')
+
+			tests = (str.islower, str.isupper, str.isdigit)
+			if not any(test(lo) and test(hi) for test in tests):
+				raise ValueError(f"Error: [{lo}-{hi}] impossible")
+			if lo > hi:
+				raise ValueError(f"Error: '{lo}' > '{hi}' impossible")
+
+			S.update(chr(i) for i in range(ord(lo), ord(hi) + 1))
+		elif part == r"\w":
+			S.update(f"{string.ascii_letters}{string.digits}_")
+		elif part == r"\d":
+			S.update(string.digits)
+		else:
+			S.add(part)
+
+	return ''.join(S)
 
 
 # ------------------------------------------------------------------------------
-def create_barcode(fmt, code, filename):
+def create_barcode(fmt):
 	module = barcode.get_barcode_class(fmt)
-	return module(code, writer=ImageWriter()).save(
-		filename=DIR_TICKETS / str(filename),
-		options=Barcode.save_options,
-	)
+
+	def writer(code, filename):
+		return module(code, writer=ImageWriter()).save(
+			filename=DIR_TICKETS / str(filename),
+			options=Barcode.save_options,
+		)
+
+	return writer
 
 
 # ------------------------------------------------------------------------------
@@ -45,10 +77,10 @@ def generate_tickets(n):
 	if barcode_fmt not in barcode.PROVIDED_BARCODES:
 		raise ValueError(
 			f'barcode.format="{barcode_fmt}" is not supported. '
-			f'Please use one of the following: {barcode.PROVIDED_BARCODES}'
+			f'Use one of the following: {barcode.PROVIDED_BARCODES}'
 		)
 
-	chars = Barcode.chars
+	chars = create_charset(Barcode.chars)
 	length = Barcode.length
 
 	if getattr(Ticket, "header", ''):
@@ -61,14 +93,17 @@ def generate_tickets(n):
 	barcode_x = barcode_y = scalar = 0
 	ticket_size = None
 
-	db_codes = set(db.queryValList("SELECT code FROM barcodes;"))
-	new_codes = set()
+	db_codes = db.queryValList("SELECT DISTINCT code FROM barcodes;")
+
+	# Generate the codes
+	G = CodeGenerator(barcode_fmt, alphabet=chars, length=length, used=db_codes)
+	codes = G.generate(n)
 
 	# Generate the barcodes
-	for i in range(n):
-		code = generate_code(chars, length, db_codes | new_codes)
-		barcode_path = create_barcode(barcode_fmt, code, uuid.uuid4())
+	writer = create_barcode(barcode_fmt)
+	for code in codes.copy():
 		try:
+			barcode_path = writer(code, uuid.uuid4())
 			barcode_img = Image.open(barcode_path)
 
 			# Scale the barcode to fit as desired for the sheets later
@@ -95,11 +130,15 @@ def generate_tickets(n):
 			ticket_img.paste(header_img, (header_shift_x, 0))
 			ticket_img.paste(barcode_img, (barcode_shift_x, header_y))
 			ticket_img.save(barcode_path, "PNG")
+
+			logger.debug(f'Generated code: "{code}"')
 		except Exception as e:
 			print(f"Error: {e}")
-			continue
-		else:
-			new_codes.add(code)
+			codes.remove(code)
 
 	# Sync database
-	db.insert(new_codes)
+	db.insert(codes)
+
+if __name__ == "__main__":
+	db.execute("DELETE FROM barcodes;")
+	generate_tickets(3)
